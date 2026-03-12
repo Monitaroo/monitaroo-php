@@ -40,7 +40,7 @@ class MetricBuffer
      */
     public function add($type, $name, $value, array $tags = [])
     {
-        $timestamp = (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.v\Z');
+        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.v\Z');
 
         $this->buffer[] = [
             'name' => $this->sanitizeName($name),
