@@ -28,7 +28,7 @@ class LogBuffer
      */
     public function add(string $level, string $message, array $context = []): void
     {
-        $timestamp = (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.v\Z');
+        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.v\Z');
 
         // Separate tags from attributes
         $tags = $context['tags'] ?? [];
