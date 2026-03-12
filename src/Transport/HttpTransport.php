@@ -49,7 +49,7 @@ class HttpTransport implements TransportInterface
             return;
         }
 
-        $this->send('/dev/v1/logs', ['logs' => $logs]);
+        $this->send('/api/dev/v1/logs', ['logs' => $logs]);
     }
 
     /**
@@ -61,7 +61,7 @@ class HttpTransport implements TransportInterface
             return;
         }
 
-        $this->send('/dev/v1/metrics', ['metrics' => $metrics]);
+        $this->send('/api/dev/v1/metrics', ['metrics' => $metrics]);
     }
 
     /**
