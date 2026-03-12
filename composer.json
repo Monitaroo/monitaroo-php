@@ -1,5 +1,5 @@
 {
-    "name": "monitaroo/monitaroo",
+    "name": "monitaroo/monitaroo-php",
     "description": "Official Monitaroo SDK for PHP - Logs, Metrics & Monitoring",
     "keywords": ["monitaroo", "logging", "metrics", "monitoring", "observability", "apm"],
     "license": "MIT",
