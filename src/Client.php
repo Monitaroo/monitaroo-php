@@ -9,27 +9,37 @@ use Monitaroo\Transport\HttpTransport;
 
 class Client
 {
-    private static ?Client $instance = null;
+    /** @var Client|null */
+    private static $instance = null;
 
-    private TransportInterface $transport;
-    private LogBuffer $logBuffer;
-    private MetricBuffer $metricBuffer;
-    private bool $autoFlush = true;
-    private bool $shutdownRegistered = false;
+    /** @var TransportInterface */
+    private $transport;
+
+    /** @var LogBuffer */
+    private $logBuffer;
+
+    /** @var MetricBuffer */
+    private $metricBuffer;
+
+    /** @var bool */
+    private $autoFlush = true;
+
+    /** @var bool */
+    private $shutdownRegistered = false;
 
     /**
      * Create a new Monitaroo client.
      *
-     * @param array{
-     *     apiKey: string,
-     *     endpoint?: string,
-     *     service?: string,
-     *     environment?: string,
-     *     host?: string,
-     *     batchSize?: int,
-     *     autoFlush?: bool,
-     *     transport?: TransportInterface
-     * } $options
+     * @param array $options {
+     *     @type string $apiKey API key (required)
+     *     @type string $endpoint API endpoint
+     *     @type string $service Service name
+     *     @type string $environment Environment name
+     *     @type string $host Host name
+     *     @type int $batchSize Batch size before auto-flush
+     *     @type bool $autoFlush Enable auto-flush on shutdown
+     *     @type TransportInterface $transport Custom transport
+     * }
      */
     public function __construct(array $options)
     {
@@ -37,19 +47,21 @@ class Client
             throw new \InvalidArgumentException('API key is required');
         }
 
-        $this->transport = $options['transport'] ?? new HttpTransport(
-            $options['apiKey'],
-            $options['endpoint'] ?? 'https://api.monitaroo.com'
-        );
+        $this->transport = isset($options['transport']) 
+            ? $options['transport'] 
+            : new HttpTransport(
+                $options['apiKey'],
+                isset($options['endpoint']) ? $options['endpoint'] : 'https://api.monitaroo.com'
+            );
 
         $defaultContext = [
-            'service' => $options['service'] ?? '',
-            'environment' => $options['environment'] ?? '',
-            'host' => $options['host'] ?? gethostname() ?: '',
+            'service' => isset($options['service']) ? $options['service'] : '',
+            'environment' => isset($options['environment']) ? $options['environment'] : '',
+            'host' => isset($options['host']) ? $options['host'] : (gethostname() ?: ''),
         ];
 
-        $batchSize = $options['batchSize'] ?? 100;
-        $this->autoFlush = $options['autoFlush'] ?? true;
+        $batchSize = isset($options['batchSize']) ? $options['batchSize'] : 100;
+        $this->autoFlush = isset($options['autoFlush']) ? $options['autoFlush'] : true;
 
         $this->logBuffer = new LogBuffer($this->transport, $defaultContext, $batchSize);
         $this->metricBuffer = new MetricBuffer($this->transport, $batchSize);
@@ -65,7 +77,7 @@ class Client
      * @param array $options
      * @return Client
      */
-    public static function init(array $options): Client
+    public static function init(array $options)
     {
         self::$instance = new self($options);
         return self::$instance;
@@ -76,7 +88,7 @@ class Client
      *
      * @return Client|null
      */
-    public static function getInstance(): ?Client
+    public static function getInstance()
     {
         return self::$instance;
     }
@@ -86,7 +98,7 @@ class Client
      *
      * @return Logger
      */
-    public function getLogger(): Logger
+    public function getLogger()
     {
         return new Logger($this->logBuffer);
     }
@@ -97,56 +109,85 @@ class Client
 
     /**
      * Log a message with a specific level.
+     *
+     * @param string $level
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function log(string $level, string $message, array $context = []): void
+    public function log($level, $message, array $context = [])
     {
         $this->logBuffer->add($level, $message, $context);
     }
 
     /**
      * Log a trace message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function trace(string $message, array $context = []): void
+    public function trace($message, array $context = [])
     {
         $this->log('trace', $message, $context);
     }
 
     /**
      * Log a debug message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function debug(string $message, array $context = []): void
+    public function debug($message, array $context = [])
     {
         $this->log('debug', $message, $context);
     }
 
     /**
      * Log an info message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function info(string $message, array $context = []): void
+    public function info($message, array $context = [])
     {
         $this->log('info', $message, $context);
     }
 
     /**
      * Log a warning message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function warn(string $message, array $context = []): void
+    public function warn($message, array $context = [])
     {
         $this->log('warn', $message, $context);
     }
 
     /**
      * Log an error message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function error(string $message, array $context = []): void
+    public function error($message, array $context = [])
     {
         $this->log('error', $message, $context);
     }
 
     /**
      * Log a fatal message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function fatal(string $message, array $context = []): void
+    public function fatal($message, array $context = [])
     {
         $this->log('fatal', $message, $context);
     }
@@ -157,32 +198,52 @@ class Client
 
     /**
      * Increment a counter metric.
+     *
+     * @param string $name
+     * @param int $value
+     * @param array $tags
+     * @return void
      */
-    public function increment(string $name, int $value = 1, array $tags = []): void
+    public function increment($name, $value = 1, array $tags = [])
     {
         $this->metricBuffer->add('counter', $name, $value, $tags);
     }
 
     /**
      * Set a gauge metric value.
+     *
+     * @param string $name
+     * @param float $value
+     * @param array $tags
+     * @return void
      */
-    public function gauge(string $name, float $value, array $tags = []): void
+    public function gauge($name, $value, array $tags = [])
     {
         $this->metricBuffer->add('gauge', $name, $value, $tags);
     }
 
     /**
      * Record a timing metric (in milliseconds).
+     *
+     * @param string $name
+     * @param float $milliseconds
+     * @param array $tags
+     * @return void
      */
-    public function timing(string $name, float $milliseconds, array $tags = []): void
+    public function timing($name, $milliseconds, array $tags = [])
     {
         $this->metricBuffer->add('timer', $name, $milliseconds, $tags);
     }
 
     /**
      * Record a histogram value.
+     *
+     * @param string $name
+     * @param float $value
+     * @param array $tags
+     * @return void
      */
-    public function histogram(string $name, float $value, array $tags = []): void
+    public function histogram($name, $value, array $tags = [])
     {
         $this->metricBuffer->add('histogram', $name, $value, $tags);
     }
@@ -190,15 +251,18 @@ class Client
     /**
      * Start a timer and return a callable to stop it.
      *
-     * @return callable(): float Returns elapsed time in ms when called
+     * @param string $name
+     * @param array $tags
+     * @return callable Returns elapsed time in ms when called
      */
-    public function startTimer(string $name, array $tags = []): callable
+    public function startTimer($name, array $tags = [])
     {
-        $start = hrtime(true);
+        $start = microtime(true);
+        $client = $this;
 
-        return function () use ($name, $tags, $start): float {
-            $elapsed = (hrtime(true) - $start) / 1_000_000; // Convert to ms
-            $this->timing($name, $elapsed, $tags);
+        return function () use ($name, $tags, $start, $client) {
+            $elapsed = (microtime(true) - $start) * 1000; // Convert to ms
+            $client->timing($name, $elapsed, $tags);
             return $elapsed;
         };
     }
@@ -209,8 +273,10 @@ class Client
 
     /**
      * Flush all buffered logs and metrics.
+     *
+     * @return void
      */
-    public function flush(): void
+    public function flush()
     {
         $this->logBuffer->flush();
         $this->metricBuffer->flush();
@@ -218,20 +284,23 @@ class Client
 
     /**
      * Register shutdown function to auto-flush.
+     *
+     * @return void
      */
-    private function registerShutdown(): void
+    private function registerShutdown()
     {
         if ($this->shutdownRegistered) {
             return;
         }
 
-        register_shutdown_function(function () {
+        $client = $this;
+        register_shutdown_function(function () use ($client) {
             // Try to finish request first (user gets response faster)
             if (function_exists('fastcgi_finish_request')) {
                 fastcgi_finish_request();
             }
 
-            $this->flush();
+            $client->flush();
         });
 
         $this->shutdownRegistered = true;
@@ -243,41 +312,73 @@ class Client
 
     /**
      * Static helper to log via global instance.
+     *
+     * @param string $level
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function logStatic(string $level, string $message, array $context = []): void
+    public static function logStatic($level, $message, array $context = [])
     {
-        self::$instance?->log($level, $message, $context);
+        if (self::$instance !== null) {
+            self::$instance->log($level, $message, $context);
+        }
     }
 
     /**
      * Static helper to increment via global instance.
+     *
+     * @param string $name
+     * @param int $value
+     * @param array $tags
+     * @return void
      */
-    public static function incrementStatic(string $name, int $value = 1, array $tags = []): void
+    public static function incrementStatic($name, $value = 1, array $tags = [])
     {
-        self::$instance?->increment($name, $value, $tags);
+        if (self::$instance !== null) {
+            self::$instance->increment($name, $value, $tags);
+        }
     }
 
     /**
      * Static helper to set gauge via global instance.
+     *
+     * @param string $name
+     * @param float $value
+     * @param array $tags
+     * @return void
      */
-    public static function gaugeStatic(string $name, float $value, array $tags = []): void
+    public static function gaugeStatic($name, $value, array $tags = [])
     {
-        self::$instance?->gauge($name, $value, $tags);
+        if (self::$instance !== null) {
+            self::$instance->gauge($name, $value, $tags);
+        }
     }
 
     /**
      * Static helper to record timing via global instance.
+     *
+     * @param string $name
+     * @param float $milliseconds
+     * @param array $tags
+     * @return void
      */
-    public static function timingStatic(string $name, float $milliseconds, array $tags = []): void
+    public static function timingStatic($name, $milliseconds, array $tags = [])
     {
-        self::$instance?->timing($name, $milliseconds, $tags);
+        if (self::$instance !== null) {
+            self::$instance->timing($name, $milliseconds, $tags);
+        }
     }
 
     /**
      * Static helper to flush via global instance.
+     *
+     * @return void
      */
-    public static function flushStatic(): void
+    public static function flushStatic()
     {
-        self::$instance?->flush();
+        if (self::$instance !== null) {
+            self::$instance->flush();
+        }
     }
 }

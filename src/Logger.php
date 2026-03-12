@@ -6,15 +6,18 @@ namespace Monitaroo;
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
-use Stringable;
 
 /**
  * PSR-3 compatible logger that sends logs to Monitaroo.
  */
 class Logger extends AbstractLogger
 {
-    private LogBuffer $buffer;
+    /** @var LogBuffer */
+    private $buffer;
 
+    /**
+     * @param LogBuffer $buffer
+     */
     public function __construct(LogBuffer $buffer)
     {
         $this->buffer = $buffer;
@@ -22,8 +25,12 @@ class Logger extends AbstractLogger
 
     /**
      * @inheritDoc
+     * @param mixed $level
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public function log($level, string|Stringable $message, array $context = []): void
+    public function log($level, $message, array $context = [])
     {
         $this->buffer->add(
             $this->normalizeLevel($level),
@@ -34,28 +41,44 @@ class Logger extends AbstractLogger
 
     /**
      * Normalize PSR-3 log level to Monitaroo level.
+     *
+     * @param mixed $level
+     * @return string
      */
-    private function normalizeLevel(mixed $level): string
+    private function normalizeLevel($level)
     {
         if (!is_string($level)) {
             return 'info';
         }
 
-        return match (strtolower($level)) {
-            LogLevel::DEBUG => 'debug',
-            LogLevel::INFO => 'info',
-            LogLevel::NOTICE => 'info',
-            LogLevel::WARNING => 'warn',
-            LogLevel::ERROR => 'error',
-            LogLevel::CRITICAL, LogLevel::ALERT, LogLevel::EMERGENCY => 'fatal',
-            default => 'info',
-        };
+        $level = strtolower($level);
+
+        switch ($level) {
+            case LogLevel::DEBUG:
+                return 'debug';
+            case LogLevel::INFO:
+                return 'info';
+            case LogLevel::NOTICE:
+                return 'info';
+            case LogLevel::WARNING:
+                return 'warn';
+            case LogLevel::ERROR:
+                return 'error';
+            case LogLevel::CRITICAL:
+            case LogLevel::ALERT:
+            case LogLevel::EMERGENCY:
+                return 'fatal';
+            default:
+                return 'info';
+        }
     }
 
     /**
      * Flush buffered logs.
+     *
+     * @return void
      */
-    public function flush(): void
+    public function flush()
     {
         $this->buffer->flush();
     }

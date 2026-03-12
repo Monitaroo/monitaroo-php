@@ -8,13 +8,22 @@ use Monitaroo\Transport\TransportInterface;
 
 class MetricBuffer
 {
-    private TransportInterface $transport;
-    private int $batchSize;
-    private array $buffer = [];
+    /** @var TransportInterface */
+    private $transport;
 
+    /** @var int */
+    private $batchSize;
+
+    /** @var array */
+    private $buffer = [];
+
+    /**
+     * @param TransportInterface $transport
+     * @param int $batchSize
+     */
     public function __construct(
         TransportInterface $transport,
-        int $batchSize = 100
+        $batchSize = 100
     ) {
         $this->transport = $transport;
         $this->batchSize = $batchSize;
@@ -26,9 +35,10 @@ class MetricBuffer
      * @param string $type One of: counter, gauge, timer, histogram
      * @param string $name Metric name (e.g., "orders.completed")
      * @param float|int $value Metric value
-     * @param array<string, string> $tags Key-value tags
+     * @param array $tags Key-value tags
+     * @return void
      */
-    public function add(string $type, string $name, float|int $value, array $tags = []): void
+    public function add($type, $name, $value, array $tags = [])
     {
         $timestamp = (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.v\Z');
 
@@ -48,8 +58,10 @@ class MetricBuffer
 
     /**
      * Flush all buffered metrics to the transport.
+     *
+     * @return void
      */
-    public function flush(): void
+    public function flush()
     {
         if (empty($this->buffer)) {
             return;
@@ -68,8 +80,10 @@ class MetricBuffer
 
     /**
      * Get the number of buffered metrics.
+     *
+     * @return int
      */
-    public function count(): int
+    public function count()
     {
         return count($this->buffer);
     }
@@ -78,8 +92,11 @@ class MetricBuffer
      * Sanitize metric name to valid format.
      * Allows: letters, numbers, dots, underscores, hyphens
      * Must start with a letter.
+     *
+     * @param string $name
+     * @return string
      */
-    private function sanitizeName(string $name): string
+    private function sanitizeName($name)
     {
         // Replace invalid characters with underscores
         $name = preg_replace('/[^a-zA-Z0-9._-]/', '_', $name);
@@ -95,25 +112,41 @@ class MetricBuffer
 
     /**
      * Normalize metric type.
+     *
+     * @param string $type
+     * @return string
      */
-    private function normalizeType(string $type): string
+    private function normalizeType($type)
     {
-        return match (strtolower($type)) {
-            'counter', 'count', 'increment' => 'counter',
-            'gauge', 'value' => 'gauge',
-            'timer', 'timing', 'time' => 'timer',
-            'histogram', 'distribution' => 'histogram',
-            default => 'gauge',
-        };
+        $type = strtolower($type);
+
+        switch ($type) {
+            case 'counter':
+            case 'count':
+            case 'increment':
+                return 'counter';
+            case 'gauge':
+            case 'value':
+                return 'gauge';
+            case 'timer':
+            case 'timing':
+            case 'time':
+                return 'timer';
+            case 'histogram':
+            case 'distribution':
+                return 'histogram';
+            default:
+                return 'gauge';
+        }
     }
 
     /**
      * Sanitize tags to ensure they're valid strings.
      *
      * @param array $tags
-     * @return array<string, string>
+     * @return array
      */
-    private function sanitizeTags(array $tags): array
+    private function sanitizeTags(array $tags)
     {
         $sanitized = [];
 

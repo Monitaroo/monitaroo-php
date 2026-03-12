@@ -20,36 +20,41 @@ class Monitaroo
     /**
      * Initialize the global Monitaroo client.
      *
-     * @param array{
-     *     apiKey: string,
-     *     endpoint?: string,
-     *     service?: string,
-     *     environment?: string,
-     *     host?: string,
-     *     batchSize?: int,
-     *     autoFlush?: bool
-     * } $options
+     * @param array $options {
+     *     @type string $apiKey API key (required)
+     *     @type string $endpoint API endpoint
+     *     @type string $service Service name
+     *     @type string $environment Environment name
+     *     @type string $host Host name
+     *     @type int $batchSize Batch size before auto-flush
+     *     @type bool $autoFlush Enable auto-flush on shutdown
+     * }
      * @return Client
      */
-    public static function init(array $options): Client
+    public static function init(array $options)
     {
         return Client::init($options);
     }
 
     /**
      * Get the global client instance.
+     *
+     * @return Client|null
      */
-    public static function client(): ?Client
+    public static function client()
     {
         return Client::getInstance();
     }
 
     /**
      * Get a PSR-3 compatible logger.
+     *
+     * @return Logger|null
      */
-    public static function logger(): ?Logger
+    public static function logger()
     {
-        return Client::getInstance()?->getLogger();
+        $client = Client::getInstance();
+        return $client !== null ? $client->getLogger() : null;
     }
 
     // ========================================
@@ -58,58 +63,108 @@ class Monitaroo
 
     /**
      * Log a trace message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function trace(string $message, array $context = []): void
+    public static function trace($message, array $context = [])
     {
-        Client::getInstance()?->trace($message, $context);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->trace($message, $context);
+        }
     }
 
     /**
      * Log a debug message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function debug(string $message, array $context = []): void
+    public static function debug($message, array $context = [])
     {
-        Client::getInstance()?->debug($message, $context);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->debug($message, $context);
+        }
     }
 
     /**
      * Log an info message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function info(string $message, array $context = []): void
+    public static function info($message, array $context = [])
     {
-        Client::getInstance()?->info($message, $context);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->info($message, $context);
+        }
     }
 
     /**
      * Log a warning message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function warn(string $message, array $context = []): void
+    public static function warn($message, array $context = [])
     {
-        Client::getInstance()?->warn($message, $context);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->warn($message, $context);
+        }
     }
 
     /**
      * Log an error message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function error(string $message, array $context = []): void
+    public static function error($message, array $context = [])
     {
-        Client::getInstance()?->error($message, $context);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->error($message, $context);
+        }
     }
 
     /**
      * Log a fatal message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function fatal(string $message, array $context = []): void
+    public static function fatal($message, array $context = [])
     {
-        Client::getInstance()?->fatal($message, $context);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->fatal($message, $context);
+        }
     }
 
     /**
      * Log a message with a specific level.
+     *
+     * @param string $level
+     * @param string $message
+     * @param array $context
+     * @return void
      */
-    public static function log(string $level, string $message, array $context = []): void
+    public static function log($level, $message, array $context = [])
     {
-        Client::getInstance()?->log($level, $message, $context);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->log($level, $message, $context);
+        }
     }
 
     // ========================================
@@ -118,34 +173,66 @@ class Monitaroo
 
     /**
      * Increment a counter metric.
+     *
+     * @param string $name
+     * @param int $value
+     * @param array $tags
+     * @return void
      */
-    public static function increment(string $name, int $value = 1, array $tags = []): void
+    public static function increment($name, $value = 1, array $tags = [])
     {
-        Client::getInstance()?->increment($name, $value, $tags);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->increment($name, $value, $tags);
+        }
     }
 
     /**
      * Set a gauge metric value.
+     *
+     * @param string $name
+     * @param float $value
+     * @param array $tags
+     * @return void
      */
-    public static function gauge(string $name, float $value, array $tags = []): void
+    public static function gauge($name, $value, array $tags = [])
     {
-        Client::getInstance()?->gauge($name, $value, $tags);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->gauge($name, $value, $tags);
+        }
     }
 
     /**
      * Record a timing metric (in milliseconds).
+     *
+     * @param string $name
+     * @param float $milliseconds
+     * @param array $tags
+     * @return void
      */
-    public static function timing(string $name, float $milliseconds, array $tags = []): void
+    public static function timing($name, $milliseconds, array $tags = [])
     {
-        Client::getInstance()?->timing($name, $milliseconds, $tags);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->timing($name, $milliseconds, $tags);
+        }
     }
 
     /**
      * Record a histogram value.
+     *
+     * @param string $name
+     * @param float $value
+     * @param array $tags
+     * @return void
      */
-    public static function histogram(string $name, float $value, array $tags = []): void
+    public static function histogram($name, $value, array $tags = [])
     {
-        Client::getInstance()?->histogram($name, $value, $tags);
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->histogram($name, $value, $tags);
+        }
     }
 
     /**
@@ -156,14 +243,18 @@ class Monitaroo
      *   // ... do something
      *   $elapsed = $stop(); // Records metric and returns elapsed ms
      *
-     * @return callable(): float|null Returns elapsed time in ms when called
+     * @param string $name
+     * @param array $tags
+     * @return callable Returns elapsed time in ms when called, or null if no client
      */
-    public static function startTimer(string $name, array $tags = []): callable
+    public static function startTimer($name, array $tags = [])
     {
         $client = Client::getInstance();
         
         if ($client === null) {
-            return fn() => null;
+            return function () {
+                return null;
+            };
         }
 
         return $client->startTimer($name, $tags);
@@ -175,9 +266,14 @@ class Monitaroo
 
     /**
      * Flush all buffered logs and metrics immediately.
+     *
+     * @return void
      */
-    public static function flush(): void
+    public static function flush()
     {
-        Client::getInstance()?->flush();
+        $client = Client::getInstance();
+        if ($client !== null) {
+            $client->flush();
+        }
     }
 }

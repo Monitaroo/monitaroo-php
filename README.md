@@ -12,7 +12,7 @@ Official PHP SDK for [Monitaroo](https://monitaroo.com) - Logs, Metrics & Monito
 composer require monitaroo/monitaroo
 ```
 
-**Requirements:** PHP 8.0+
+**Requirements:** PHP 7.2+ (v1.x) or PHP 8.0+ (v2.x)
 
 ## Quick Start
 

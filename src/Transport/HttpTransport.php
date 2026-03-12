@@ -6,17 +6,32 @@ namespace Monitaroo\Transport;
 
 class HttpTransport implements TransportInterface
 {
-    private string $apiKey;
-    private string $endpoint;
-    private int $timeout;
-    private int $maxRetries;
-    private array $retryDelays;
+    /** @var string */
+    private $apiKey;
 
+    /** @var string */
+    private $endpoint;
+
+    /** @var int */
+    private $timeout;
+
+    /** @var int */
+    private $maxRetries;
+
+    /** @var array */
+    private $retryDelays;
+
+    /**
+     * @param string $apiKey
+     * @param string $endpoint
+     * @param int $timeout
+     * @param int $maxRetries
+     */
     public function __construct(
-        string $apiKey,
-        string $endpoint = 'https://api.monitaroo.com',
-        int $timeout = 5,
-        int $maxRetries = 3
+        $apiKey,
+        $endpoint = 'https://api.monitaroo.com',
+        $timeout = 5,
+        $maxRetries = 3
     ) {
         $this->apiKey = $apiKey;
         $this->endpoint = rtrim($endpoint, '/');
@@ -28,7 +43,7 @@ class HttpTransport implements TransportInterface
     /**
      * @inheritDoc
      */
-    public function sendLogs(array $logs): void
+    public function sendLogs(array $logs)
     {
         if (empty($logs)) {
             return;
@@ -40,7 +55,7 @@ class HttpTransport implements TransportInterface
     /**
      * @inheritDoc
      */
-    public function sendMetrics(array $metrics): void
+    public function sendMetrics(array $metrics)
     {
         if (empty($metrics)) {
             return;
@@ -54,12 +69,17 @@ class HttpTransport implements TransportInterface
      *
      * @param string $path API path
      * @param array $data Data to send
+     * @return void
      * @throws \RuntimeException If all retries fail
      */
-    private function send(string $path, array $data): void
+    private function send($path, array $data)
     {
         $url = $this->endpoint . $path;
-        $payload = json_encode($data, JSON_THROW_ON_ERROR);
+        $payload = json_encode($data);
+        
+        if ($payload === false) {
+            throw new \RuntimeException('Failed to encode JSON');
+        }
 
         $lastException = null;
 
@@ -71,19 +91,19 @@ class HttpTransport implements TransportInterface
                 $lastException = $e;
 
                 // Don't retry on client errors (4xx)
-                if (str_contains($e->getMessage(), 'HTTP 4')) {
+                if (strpos($e->getMessage(), 'HTTP 4') !== false) {
                     throw $e;
                 }
 
                 // Wait before retry (with exponential backoff)
                 if ($attempt < $this->maxRetries) {
-                    $delayMs = $this->retryDelays[$attempt] ?? 1000;
+                    $delayMs = isset($this->retryDelays[$attempt]) ? $this->retryDelays[$attempt] : 1000;
                     usleep($delayMs * 1000);
                 }
             }
         }
 
-        throw $lastException ?? new \RuntimeException('Failed to send data to Monitaroo');
+        throw $lastException !== null ? $lastException : new \RuntimeException('Failed to send data to Monitaroo');
     }
 
     /**
@@ -91,9 +111,10 @@ class HttpTransport implements TransportInterface
      *
      * @param string $url
      * @param string $payload JSON payload
+     * @return void
      * @throws \RuntimeException On HTTP error
      */
-    private function doRequest(string $url, string $payload): void
+    private function doRequest($url, $payload)
     {
         $ch = curl_init($url);
 
@@ -114,8 +135,6 @@ class HttpTransport implements TransportInterface
                     'Authorization: Bearer ' . $this->apiKey,
                     'User-Agent: monitaroo-php/1.0',
                 ],
-                // Don't verify SSL in dev (remove in production)
-                // CURLOPT_SSL_VERIFYPEER => true,
             ]);
 
             $response = curl_exec($ch);
